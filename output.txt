@@ -1,0 +1,15 @@
+Infix:  8 + 2 
+Postfix:  8  2 +
+The value is 10
+Infix:  17 ^ 2 
+Postfix:  17  2 ^
+The value is 289
+Infix:  3 + 5 * 8 
+Postfix:  3  5  8 *+
+The value is 43
+Infix:  8 / 2 + 7 
+Postfix:  8  2 / 7 +
+The value is 11
+Infix:  75 / 35 
+Postfix:  75  35 /
+The value is 2
