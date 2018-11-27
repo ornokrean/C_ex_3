@@ -240,3 +240,9 @@ int main()
 
     return 0;
 }
+
+
+
+// gcc main.c stack.c stack.h -o ex3
+
+// valgrind --leak-check=full --show-possibly-lost=yes --show-reachable=yes  --undef-value-errors=yes ex3
