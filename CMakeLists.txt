@@ -3,4 +3,4 @@ project(Cex3 C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(Cex3 main.c)
+add_executable(Cex3 main.c stack.c)

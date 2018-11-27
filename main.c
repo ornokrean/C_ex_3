@@ -1,23 +1,47 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include "stack.h"
+
+/**
+ * @var char EMPTY_CHAR
+ * @brief empty char to replace non wanted char
+ */
+static const char EMPTY_CHAR = '\0';
+
+/**
+ * @var char LINE_CHAR
+ * @brief line jump to replace - non wanted char
+ */
+static const char LINE_CHAR = '\n';
 
 enum operators
 {
     PLUS = '+', MINUS = '-', TIMES = '*', DIVIDE = '/', POWER = '^'
-} operator;
+};
+
+
 enum argumentType
 {
-   OPERAND = 'd',
-   OPERTOR = 'r'
-} argumentType;
+    OPERAND = 'd',
+    OPERTOR = 'r'
+};
+
+
 typedef struct argument
 {
     char type;
     char *data;
+    int number;
 } argument;
 
-int isOperator( char c)
+/**
+ * this function checks if given char is operator
+ * @param c the char to check
+ * @return 1 if this is an operator, 0 otherwise
+ */
+int isOperator(char c)
 {
     if (c == PLUS || c == MINUS || c == TIMES || c == DIVIDE || c == POWER)
     {
@@ -27,90 +51,188 @@ int isOperator( char c)
     return 0;
 }
 
+/**
+ * this function converts given string to an int, and prints error on fail
+ * @param to_convert the string to convert
+ * @return int, the converted string
+ */
+int convertToInt(const char *to_convert)
+{
+    char *temp = NULL;
+    const int res = (int) strtol(to_convert, &temp, 10);
+    if (strlen(temp))
+    {
+        fprintf(stderr, "eree"); //FIXME
+        exit(EXIT_FAILURE);
+    }
+    return res;
+}
+
+/**
+ * this function sets a new or old memory to given pointer. if ths memory allocation fails, it
+ * will exit the program and print a message.
+ * @param oldMemory the old memory, if exists, to copy to the new memory
+ * @param newSize the new memory size to create.
+ * @return a pointer to the new memory if created
+ */
+void *allocMemory(void *oldMemory, size_t newSize)
+{
+    void *newMemory = (oldMemory == NULL) ? malloc(newSize) : realloc(oldMemory, newSize);
+    if (newMemory == NULL)
+    {
+//        fprintf(stderr, MEMORY_ERROR); //FIXME
+        exit(EXIT_FAILURE);
+    }
+    return newMemory;
+}
+/**
+ * this funtion decides which operator has greater precedence
+ * @param op1 the first operator
+ * @param op2 the second operator
+ * @return 0 if equal, 1 if op1 has greater precedence, 2 if op2 has greater precedence
+ */
+int pred(char op1,char op2){
+    if (op1 == POWER){
+        if (op2 == POWER){
+            return 0;
+        }
+        return 1;
+    }
+    if(op1 == TIMES || op1 == DIVIDE){
+        if (op2 == TIMES || op2 == DIVIDE){
+            return 0;
+        }
+        else if(op2 == POWER){
+            return 2;
+        }
+        return 1;
+    }
+    else if(op2 == POWER || op2 == TIMES || op2 == DIVIDE){
+        return 2;
+    }
+    return 0;
+}
+
+/**
+ * this function removes a given char from the given string, and will replace it with EMPTY_CHAR.
+ * @param currLine the line to remove the given char from
+ * @param to_remove the char to remove
+ */
+void removeChar(const char *currLine, char to_remove)
+{
+    char *pos;
+    if ((pos = strchr(currLine, to_remove)) != NULL)
+    {
+        *pos = EMPTY_CHAR;
+    }
+}
 
 int main()
 {
-//    char *Q = "71 * ( 2 + 6 ) - 15 / 3";
-//      71 * ( 2 + 6 ) - 15 / 3
+
+
+    Stack *stack = stackAlloc(sizeof(argument));
     char buffer[101];
-    size_t newNumLen;
-    size_t PSize = 0;
-    argument *P = (argument*) malloc(PSize);
+    argument P[100];
     while (fgets(buffer, 101, stdin))
     {
+        removeChar(buffer, LINE_CHAR);
         int i = 0;
-        while(i<strlen(buffer))
+        int argNum = 0;
+        while (i < strlen(buffer))
         {
-            char newnumber[100] = "";
-            while (isOperator(buffer[i]) == 0)
+            if (isdigit(buffer[i]))
             {
-                strncat(newnumber, &buffer[i], 1);
-                i++;
-            }
-            argument arg;
-            // operand is found
-            if ((newNumLen = strlen(newnumber)) != 0)
-            {
+                //create new number
+                argument arg;
                 arg.type = OPERAND;
-                arg.data = malloc(newNumLen * sizeof(char) + 1);
-                strcat(newnumber," ");
-                strcpy(arg.data, newnumber);
-                PSize += sizeof(argument);
-                P = (argument*) realloc(P,PSize);
-                P[PSize/ sizeof(argument)] = arg;
-            }
-            else if (buffer[i] == '('){
-                //push in stack
-            }
-            else if(buffer[i] == ')'){
+                arg.data = (char *) allocMemory(NULL, sizeof(char) + 1);
+                // insert the int to char and add space
+                strncpy(arg.data, &buffer[i], 1);
 
+
+                i++;
+                // concat
+                while (isdigit(buffer[i]) && i < strlen(buffer))
+                {
+                    strncat(arg.data, &buffer[i], 1);
+                    i++;
+                }
+                //add to our array
+                arg.number = convertToInt(arg.data);
+                strcat(arg.data, " ");
+                P[argNum] = arg;
+                argNum++;
             }
-            else // operator is found
+            if (buffer[i] == '(')
             {
-                arg.type = OPERTOR;
-                strcpy(arg.data, &buffer[i]);
-                PSize += sizeof(argument);
-                P = (argument*) realloc(P,PSize);
-                P[PSize/ sizeof(argument)] = arg;
+                push(stack, &buffer[i]);
             }
-            printf("type %c data %s\n", arg.type, arg.data);
+            if (buffer[i] == ')')
+            {
+                while (!isEmptyStack(stack) && strcmp(stack->_top->_data, "(") != 0)
+                {
+                    // add the popped value to P
+                    argument head;
+                    pop(stack, &head);
+                    P[argNum] = head;
+                    argNum++;
+
+                }
+                pop(stack, NULL); //Pop the left parenthesis
+            }
+            if (isOperator(buffer[i]))// operator is found
+            {
+                if (isEmptyStack(stack) || strcmp(stack->_top->_data, "(") == 0)
+                {
+                    // Push the operator onto the stack
+                    argument arg;
+                    arg.type = OPERTOR;
+                    arg.data = (char *) allocMemory(NULL, sizeof(char) + 1);
+                    strncpy(arg.data, &buffer[i], 1);
+                    push(stack, &arg);
+
+                }
+                else
+                {
+                    while (!isEmptyStack(stack) && strcmp(stack->_top->_data, "(") != 0
+                        && pred(buffer[i],(char)stack->_top->_data) < 2)
+                    {
+                        //Pop the stack and add the top value to P
+                        argument head;
+                        pop(stack, &head);
+                        P[argNum] = head;
+                        argNum++;
+
+                    }
+
+
+                }
+            }
             i++;
         }
 
+
+
+        while(!isEmptyStack(stack))
+        {
+            argument head;
+            pop(stack,&head);
+            P[argNum] = head;
+            argNum++;
+        }
+
+//        for (int i = 0; i < 4; i++)
+//        {
+//
+//                printf("print type: %c data: %s number: %d\n", P[i].type, P[i].data, P[i].number);
+//
+//        }
+
     }
+    freeStack(&stack);
 
 
-//    While (we have not reached the end of Q)
-//       If (an operand is found)
-//           Add it to P
-//       End-If
-//       If (a left parenthesis is found)
-//           Push it onto the stack
-//       End-If
-//       If (a right parenthesis is found)
-//           While (the stack is not empty AND the top item is not a left parenthesis)
-//                Pop the stack and add the popped value to P
-//           End-While
-//       Pop the left parenthesis from the stack and discard it
-//       End-If
-//       If (an operator is found)
-//           If (the stack is empty OR if the top element is a left parenthesis)
-//              Push the operator onto the stack
-//           Else
-//              While (the stack is not empty AND the top of the stack is not a left parenthesis AND
-//                                precedence of the operator <= precedence of the top of the stack)
-//
-//                      Pop the stack and add the top value to P
-//              End-While
-//              Push the latest operator onto the stack
-//           End-If
-//       End-If
-//    End-While
-//
-//
-//    While (the stack is not empty)
-//          Pop the stack and add the popped value to P
-//    End-While
 
 
 
