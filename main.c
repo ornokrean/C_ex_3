@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "stack.h"
+#include <math.h>
 
 /**
  * @var char EMPTY_CHAR
@@ -16,23 +17,17 @@ static const char EMPTY_CHAR = '\0';
  */
 static const char LINE_CHAR = '\n';
 
-enum operators
-{
-    PLUS = '+', MINUS = '-', TIMES = '*', DIVIDE = '/', POWER = '^'
-};
-
 
 enum argumentType
 {
-    OPERAND = 'd',
-    OPERTOR = 'r'
+    PLUS = '+', MINUS = '-', TIMES = '*', DIVIDE = '/', POWER = '^',
+    OPERAND = 'd'
 };
 
 
 typedef struct argument
 {
     char type;
-    char *data;
     int number;
 } argument;
 
@@ -68,6 +63,15 @@ int convertToInt(const char *to_convert)
     return res;
 }
 
+void checkTop(Stack *stack, argument *head)
+{
+    if (!isEmptyStack(stack))
+    {
+        memcpy(head, stack->_top->_data, stack->_elementSize);
+    }
+}
+
+
 /**
  * this function sets a new or old memory to given pointer. if ths memory allocation fails, it
  * will exit the program and print a message.
@@ -81,33 +85,43 @@ void *allocMemory(void *oldMemory, size_t newSize)
     if (newMemory == NULL)
     {
 //        fprintf(stderr, MEMORY_ERROR); //FIXME
+        printf("hehewgliwjesvfds");
         exit(EXIT_FAILURE);
     }
     return newMemory;
 }
+
 /**
  * this funtion decides which operator has greater precedence
  * @param op1 the first operator
  * @param op2 the second operator
  * @return 0 if equal, 1 if op1 has greater precedence, 2 if op2 has greater precedence
  */
-int pred(char op1,char op2){
-    if (op1 == POWER){
-        if (op2 == POWER){
+int pred(char op1, char op2)
+{
+
+    if (op1 == POWER)
+    {
+        if (op2 == POWER)
+        {
             return 0;
         }
         return 1;
     }
-    if(op1 == TIMES || op1 == DIVIDE){
-        if (op2 == TIMES || op2 == DIVIDE){
+    if (op1 == TIMES || op1 == DIVIDE)
+    {
+        if (op2 == TIMES || op2 == DIVIDE)
+        {
             return 0;
         }
-        else if(op2 == POWER){
+        else if (op2 == POWER)
+        {
             return 2;
         }
         return 1;
     }
-    else if(op2 == POWER || op2 == TIMES || op2 == DIVIDE){
+    else if (op2 == POWER || op2 == TIMES || op2 == DIVIDE)
+    {
         return 2;
     }
     return 0;
@@ -127,119 +141,169 @@ void removeChar(const char *currLine, char to_remove)
     }
 }
 
+
+
 int main()
 {
 
 
-    Stack *stack = stackAlloc(sizeof(argument));
-    char buffer[101];
-    argument *P = (argument*) allocMemory(NULL,sizeof(argument));
-    while (fgets(buffer, 101, stdin))
+    char line[101];
+    while (fgets(line, 101, stdin))
     {
-        removeChar(buffer, LINE_CHAR);
+        //for each row entered:
+        Stack *stack = stackAlloc(sizeof(argument));
+        argument *arguments = (argument *) allocMemory(NULL, sizeof(argument) * strlen(line));
+        removeChar(line, LINE_CHAR);
         int i = 0;
         int argNum = 0;
-        while (i < strlen(buffer))
+        argument *tempHead = (argument *) allocMemory(NULL, sizeof(argument));
+        while (i < (int)strlen(line))
         {
-            if (isdigit(buffer[i]))
+            if (isdigit(line[i]))
             {
                 //create new number
-                argument arg;
-                arg.type = OPERAND;
-                arg.data = (char *) allocMemory(NULL, sizeof(char) + 1);
+                arguments[argNum].type = OPERAND;
                 // insert the int to char and add space
-                strncpy(arg.data, &buffer[i], 1);
-
-
-                i++;
+                char currNum[100] = {0};
+                int currIndex = 0;
                 // concat
-                while (isdigit(buffer[i]) && i < strlen(buffer))
+                while (isdigit(line[i]) && i < (int)strlen(line))
                 {
-                    strncat(arg.data, &buffer[i], 1);
+                    // add to cur number
+                    currNum[currIndex] = line[i];
+                    currIndex++;
                     i++;
                 }
+
                 //add to our array
-                arg.number = convertToInt(arg.data);
-                strcat(arg.data, " ");
-                P[argNum] = arg;
+                arguments[argNum].number = convertToInt(currNum);
                 argNum++;
-                P = (argument*) allocMemory(P,sizeof(argument)*argNum);
+                continue;
             }
-            if (buffer[i] == '(')
+            else if (line[i] == '(')
             {
-                push(stack, &buffer[i]);
+                push(stack, &line[i]);
             }
-            if (buffer[i] == ')')
+            else if (line[i] == ')')
             {
-                while (!isEmptyStack(stack) && strcmp(stack->_top->_data, "(") != 0)
+                checkTop(stack, tempHead);
+                while (!isEmptyStack(stack) && tempHead->type != '(')
                 {
-                    // add the popped value to P
+                    // add the popped value to arguments
                     argument head;
                     pop(stack, &head);
-                    P[argNum] = head;
+                    arguments[argNum] = head;
                     argNum++;
-                    P = (argument*) allocMemory(P,sizeof(argument)*argNum);
-
                 }
                 pop(stack, NULL); //Pop the left parenthesis
             }
-            if (isOperator(buffer[i]))// operator is found
+            else if (isOperator(line[i]))// operator is found
             {
-                if (isEmptyStack(stack) || strcmp(stack->_top->_data, "(") == 0)
+                checkTop(stack, tempHead);
+                argument latestOp;
+                if (isEmptyStack(stack) || tempHead->type == '(')
                 {
+
                     // Push the operator onto the stack
-                    argument arg;
-                    arg.type = OPERTOR;
-                    arg.data = (char *) allocMemory(NULL, sizeof(char) + 1);
-                    strncpy(arg.data, &buffer[i], 1);
-                    push(stack, &arg);
+                    latestOp.type = line[i];
+                    push(stack, &latestOp);
 
                 }
                 else
                 {
-                    while (!isEmptyStack(stack) && strcmp(stack->_top->_data, "(") != 0
-                        && pred(buffer[i],stack->_top->_data) < 2)
+                    checkTop(stack, tempHead);
+                    while (!isEmptyStack(stack) && tempHead->type != '('
+                           && pred(line[i], tempHead->type) < 2)
                     {
-                        //Pop the stack and add the top value to P
+                        //Pop the stack and add the top value to arguments
                         argument head;
                         pop(stack, &head);
-                        P[argNum] = head;
+                        arguments[argNum] = head;
                         argNum++;
-                        P = (argument*) allocMemory(P,sizeof(argument)*argNum);
 
                     }
-
-
+                    push(stack, &latestOp);
                 }
             }
             i++;
         }
 
 
-
-        while(!isEmptyStack(stack))
+        while (!isEmptyStack(stack))
         {
             argument head;
-            pop(stack,&head);
-            P[argNum] = head;
+            pop(stack, &head);
+            arguments[argNum] = head;
             argNum++;
-            P = (argument*) allocMemory(P,sizeof(argument)*argNum);
         }
 
 //        for (int i = 0; i < 4; i++)
 //        {
 //
-//                printf("print type: %c data: %s number: %d\n", P[i].type, P[i].data, P[i].number);
+//                printf("print type: %c data: %s number: %d\n", arguments[i].type, arguments[i].data, arguments[i].number);
 //
 //        }
+//        for (int j = 0; j < argNum; ++j)
+//        {
+//            printf("print type: %c  number: %d\n", arguments[j].type,
+//                    arguments[j].number);
+//        }
+//         12   if (arguments[j].data != NULL)
+//            {
+//                free(arguments[j].data);
+//            }
+//        }
+        freeStack(&stack);
+
+        //make it postfix:
+        int j = 0;
+        stack = stackAlloc(sizeof(argument));
+        while (j < argNum)
+        {
+            if (!isOperator(arguments[j].type)) // operand
+            {
+                push(stack, &arguments[j]);
+            }
+            else // operator
+            {
+                argument A;
+                pop(stack, &A);
+                argument B;
+                pop(stack, &B);
+                argument res;
+                res.type = OPERAND;
+                if (arguments[j].type == POWER){
+                    res.number = (int) (pow(B.number, A.number) + 0.5);
+
+                }
+                else if (arguments[j].type == TIMES){
+                    res.number =  B.number*A.number;
+                }else if (arguments[j].type == DIVIDE){
+                    if (A.number == 0){
+                        printf("error");
+                    }else{
+                        res.number =  B.number/A.number;
+                    }
+                }else if (arguments[j].type == PLUS){
+                    res.number =  B.number+A.number;
+                }else if (arguments[j].type == MINUS){
+                    res.number =  B.number-A.number;
+                }
+
+//                res.number= calcExp(B,A,arguments[j]);
+                push(stack,&res);
+            }
+            j++;
+        }
+
+        argument answer;
+        pop(stack,&answer);
+        printf("%d",answer.number);
+        freeStack(&stack);
+        free(tempHead);
+        free(arguments);
 
     }
-    freeStack(&stack);
-
-
-
-
-
 
 
     return 0;
