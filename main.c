@@ -133,7 +133,7 @@ int main()
 
     Stack *stack = stackAlloc(sizeof(argument));
     char buffer[101];
-    argument P[100];
+    argument *P = (argument*) allocMemory(NULL,sizeof(argument));
     while (fgets(buffer, 101, stdin))
     {
         removeChar(buffer, LINE_CHAR);
@@ -163,6 +163,7 @@ int main()
                 strcat(arg.data, " ");
                 P[argNum] = arg;
                 argNum++;
+                P = (argument*) allocMemory(P,sizeof(argument)*argNum);
             }
             if (buffer[i] == '(')
             {
@@ -177,6 +178,7 @@ int main()
                     pop(stack, &head);
                     P[argNum] = head;
                     argNum++;
+                    P = (argument*) allocMemory(P,sizeof(argument)*argNum);
 
                 }
                 pop(stack, NULL); //Pop the left parenthesis
@@ -196,13 +198,14 @@ int main()
                 else
                 {
                     while (!isEmptyStack(stack) && strcmp(stack->_top->_data, "(") != 0
-                        && pred(buffer[i],(char)stack->_top->_data) < 2)
+                        && pred(buffer[i],stack->_top->_data) < 2)
                     {
                         //Pop the stack and add the top value to P
                         argument head;
                         pop(stack, &head);
                         P[argNum] = head;
                         argNum++;
+                        P = (argument*) allocMemory(P,sizeof(argument)*argNum);
 
                     }
 
@@ -220,6 +223,7 @@ int main()
             pop(stack,&head);
             P[argNum] = head;
             argNum++;
+            P = (argument*) allocMemory(P,sizeof(argument)*argNum);
         }
 
 //        for (int i = 0; i < 4; i++)
