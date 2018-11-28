@@ -190,7 +190,6 @@ void handleInfixRightParenthesis(Stack *stack, argument *arguments, int *argNum,
     checkTop(stack, (*tempHead));
     while (!isEmptyStack(stack) && (*tempHead)->type != '(')
     {
-
         // add the popped value to arguments
         popAndAddArgument(stack, arguments, argNum);
         checkTop(stack, (*tempHead));
@@ -216,11 +215,15 @@ handleInfixOperator(char *line, Stack *stack, argument *arguments, int *argNum, 
     else
     {
         checkTop(stack, (*tempHead));
+
         while (!isEmptyStack(stack) && (*tempHead)->type != '('
                && pred((*tempHead)->type, line[i]) < 2)
         {
+
             //Pop the stack and add the top value to arguments
             popAndAddArgument(stack, arguments, argNum);
+            checkTop(stack, (*tempHead));
+
         }
         push(stack, &latestOperator);
     }
@@ -267,6 +270,8 @@ void readInfix(char *line, Stack *stack, argument *arguments, int *argNum, argum
             continue; //TODO maybe remove it
         }
         else
+
+
         {
             printf("%c",line[i]);
             if (line[i] == '(')
@@ -408,10 +413,8 @@ int main()
     {
         //for each row entered:
 
-
         Stack *stack = stackAlloc(sizeof(argument));
         argument *arguments = (argument *) allocMemory(NULL, sizeof(argument) * strlen(line));
-
         int argNum;
         argument *tempHead;
 
