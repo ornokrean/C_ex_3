@@ -261,6 +261,7 @@ void readInfix(char *line, Stack *stack, argument *arguments, int *argNum, argum
     {
         if (isdigit(line[i]))
         {
+
             i = handleInfixDigit(line, arguments, argNum, i);
             printf(" %d ",arguments[(*argNum)-1].number);
             continue; //TODO maybe remove it
