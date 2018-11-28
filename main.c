@@ -162,13 +162,13 @@ int handleInfixDigit(char *line, argument *arguments, int *argNum, int i)
     char currNum[100] = {0};
     int currIndex = 0;
     // concat
-    while (isdigit(line[i]) && i < (int)strlen(line))
-                {
-                    // add to cur number
-                    currNum[currIndex] = line[i];
-                    currIndex++;
-                    i++;
-                }
+    while (isdigit(line[i]) && i < (int) strlen(line))
+    {
+        // add to cur number
+        currNum[currIndex] = line[i];
+        currIndex++;
+        i++;
+    }
 
     //add to our array
     arguments[(*argNum)].number = convertToInt(currNum);
@@ -189,79 +189,86 @@ void handleInfixRightParenthesis(Stack *stack, argument *arguments, int *argNum,
 {
     checkTop(stack, (*tempHead));
     while (!isEmptyStack(stack) && (*tempHead)->type != '(')
-                {
-                    // add the popped value to arguments
-                    popAndAddArgument(stack, arguments, argNum);
-                }
+    {
+        // add the popped value to arguments
+        popAndAddArgument(stack, arguments, argNum);
+    }
     pop(stack, NULL); //Pop the left parenthesis //TODO problem here stack is empty
 }
 
-void handleInfixOperator(char *line, Stack *stack, argument *arguments, int *argNum,
-                         argument **tempHead,
-                         int i)
+void
+handleInfixOperator(char *line, Stack *stack, argument *arguments, int *argNum, argument **tempHead,
+                    int i)
 {
     checkTop(stack, (*tempHead));
-    argument latestOp;
-    latestOp.type = line[i];
+    argument latestOperator;
+    latestOperator.type = line[i];
     if (isEmptyStack(stack) || (*tempHead)->type == '(')
-                {
-                    // Push the operator onto the stack
-                    push(stack, &latestOp);
+    {
+        // Push the operator onto the stack
+        push(stack, &latestOperator);
 
-                }
-                else
-                {
-                    checkTop(stack, (*tempHead));
-                    while (!isEmptyStack(stack) && (*tempHead)->type != '('
-                           && pred((*tempHead)->type, line[i]) < 2)
-                    {
-                        //Pop the stack and add the top value to arguments
-                        popAndAddArgument(stack, arguments, argNum);
-                    }
-                    push(stack, &latestOp);
-                }
+    }
+    else
+    {
+        checkTop(stack, (*tempHead));
+        while (!isEmptyStack(stack) && (*tempHead)->type != '('
+               && pred((*tempHead)->type, line[i]) < 2)
+        {
+            //Pop the stack and add the top value to arguments
+            popAndAddArgument(stack, arguments, argNum);
+        }
+        push(stack, &latestOperator);
+    }
 }
 
 void addAllFromStack(Stack *stack, argument *arguments, int *argNum)
 {
     while (!isEmptyStack(stack))
-        {
-            popAndAddArgument(stack, arguments, argNum);
-        }
+    {
+        popAndAddArgument(stack, arguments, argNum);
+    }
 }
 
 void readInfix(char *line, Stack *stack, argument *arguments, int *argNum,
-               argument **tempHead )
+               argument **tempHead)
 {
     (*argNum) = 0;
     (*tempHead) = (argument *) allocMemory(NULL, sizeof(argument));
     removeChar(line, LINE_CHAR);
     int i = 0;
-    while (i < (int)strlen(line))
+    while (i < (int) strlen(line))
+    {
+        if (isdigit(line[i]))
         {
-            if (isdigit(line[i]))
-            {
-                i = handleInfixDigit(line, arguments, argNum, i);
-                continue;
-            }
-            else if (line[i] == '(')
-            {
-                push(stack, &line[i]);
-            }
-            else if (line[i] == ')')
-            {
-                handleInfixRightParenthesis(stack, arguments, argNum, tempHead);
-            }
-            else if (isOperator(line[i]))// operator is found
-            {
-                handleInfixOperator(line, stack, arguments, argNum, tempHead, i);
-            }
-            i++;
+            i = handleInfixDigit(line, arguments, argNum, i);
+            continue; //TODO maybe remove it
         }
+        else if (line[i] == '(')
+        {
+            push(stack, &line[i]);
+        }
+        else if (line[i] == ')')
+        {
+            handleInfixRightParenthesis(stack, arguments, argNum, tempHead);
+        }
+        else if (isOperator(line[i]))// operator is found
+        {
+            handleInfixOperator(line, stack, arguments, argNum, tempHead, i);
+        }
+        i++;
+    }
     addAllFromStack(stack, arguments, argNum);
 }
 
-void handlePostfixOperator(Stack *stack, argument *arguments, int j)
+/**
+ * this function calculates an expression given "by B op A" while A is the first item in the
+ * stack, Bis the second item in the stack, and op is the operator from the arguments array
+ * @param stack a stack of arguments
+ * @param arguments the array of arguments to take operator from
+ * @param index the current index of the argument to take from arguments array
+ */
+void calcExpression(Stack *stack, argument arg)
 {
     argument A;
     pop(stack, &A);
@@ -269,51 +276,74 @@ void handlePostfixOperator(Stack *stack, argument *arguments, int j)
     pop(stack, &B);
     argument res;
     res.type = OPERAND;
-    if (arguments[j].type == POWER){
-                    res.number = (int) (pow(B.number, A.number) + 0.5);
+    if (arg.type == POWER)
+    {
+        res.number = (int) (pow(B.number, A.number) + 0.5);
 
-                }
-                else if (arguments[j].type == TIMES){
-                    res.number =  B.number*A.number;
-                }else if (arguments[j].type == DIVIDE){
-                    if (A.number == 0){
-                        printf("error");
-                    }else{
-                        res.number =  B.number/A.number;
-                    }
-                }else if (arguments[j].type == PLUS){
-                    res.number =  B.number+A.number;
-                }else if (arguments[j].type == MINUS){
-                    res.number =  B.number-A.number;
-                }
-    push(stack,&res);
+    }
+    else if (arg.type == TIMES)
+    {
+        res.number = B.number * A.number;
+    }
+    else if (arg.type == DIVIDE)
+    {
+        if (A.number == 0)
+        {
+            fprintf(stderr,DIV_BY_ZERO_MSG);
+        }
+        else
+        {
+            res.number = B.number / A.number;
+        }
+    }
+    else if (arg.type == PLUS)
+    {
+        res.number = B.number + A.number;
+    }
+    else if (arg.type == MINUS)
+    {
+        res.number = B.number - A.number;
+    }
+    push(stack, &res);
 }
 
+/**
+ * this functions reads a postfix given and calculates it
+ * @param stack the stack of arguments to be calculated
+ * @param arguments the postfix expression
+ * @param argNum the number of items in the arguments array
+ * @return the given stack
+ */
 Stack *readPostfix(Stack *stack, argument *arguments, int argNum)
 {
     int j = 0;
     stack = stackAlloc(sizeof(argument));
 
     while (j < argNum)
+    {
+        if (!isOperator(arguments[j].type)) // operand
         {
-            if (!isOperator(arguments[j].type)) // operand
-            {
-                push(stack, &arguments[j]);
-            }
-            else // operator
-            {
-
-                handlePostfixOperator(stack, arguments, j);
-            }
-            j++;
+            push(stack, &arguments[j]);
         }
-
+        else // operator
+        {
+            calcExpression(stack, arguments[j]);
+        }
+        j++;
+    }
+// TODO handle answer
     argument answer;
-    pop(stack,&answer);
-    printf("\n\n%d",answer.number);
+    pop(stack, &answer);
+    printf("\n\n%d", answer.number);
     return stack;
 }
 
+/**
+ * this function frees all allocated pointers in the program
+ * @param stack a pointer to a memory to br freed
+ * @param arguments a pointer to a memory to br freed
+ * @param tempHead a pointer to a memory to br freed
+ */
 void freeAllAllocs(Stack **stack, argument *arguments, argument *tempHead)
 {
     freeStack(stack);
@@ -339,7 +369,7 @@ int main()
 
         for (int i = 0; i < argNum; ++i)
         {
-            printf("type: %c, num: %d \n",arguments[i].type,arguments[i].number);
+            printf("type: %c, num: %d \n", arguments[i].type, arguments[i].number);
         }
         freeStack(&stack);
 
@@ -350,7 +380,7 @@ int main()
         printf("Postfix : \n");
         for (int i = 0; i < argNum; ++i)
         {
-            printf("type: %c, num: %d \n",arguments[i].type,arguments[i].number);
+            printf("type: %c, num: %d \n", arguments[i].type, arguments[i].number);
         }
         freeAllAllocs(&stack, arguments, tempHead);
 
