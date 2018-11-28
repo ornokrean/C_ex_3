@@ -64,7 +64,7 @@ int convertToInt(const char *to_convert)
     const int res = (int) strtol(to_convert, &temp, 10);
     if (strlen(temp))
     {
-//        fprintf(stderr, "eree"); //FIXME
+        fprintf(stderr, "  "); //FIXME
         exit(EXIT_FAILURE);
     }
     return res;
@@ -264,7 +264,6 @@ void readInfix(char *line, Stack *stack, argument *arguments, int *argNum, argum
     {
         if (isdigit(line[i]))
         {
-
             i = handleInfixDigit(line, arguments, argNum, i);
             printf(" %d ",arguments[(*argNum)-1].number);
             continue; //TODO maybe remove it
@@ -274,11 +273,11 @@ void readInfix(char *line, Stack *stack, argument *arguments, int *argNum, argum
 
         {
             printf("%c",line[i]);
-            if (line[i] == '(')
+            if (line[i] == OPEN_PAR)
             {
                 push(stack, &line[i]);
             }
-            else if (line[i] == ')')
+            else if (line[i] == CLOSE_PAR)
             {
                 handleInfixRightParenthesis(stack, arguments, argNum, tempHead);
             }
@@ -323,7 +322,7 @@ void calcExpression(Stack *stack, argument operator)
     {
         if (A.number == 0)
         {
-//            fprintf(stderr,DIV_BY_ZERO_MSG);
+            fprintf(stderr,DIV_BY_ZERO_MSG);
         }
         else
         {
@@ -402,7 +401,7 @@ void printPostfix(argument *arguments, int argNum)
 }
 
 void printExpressionResult(int result)
-{ printf("The value is %d", result); }
+{ printf("The value is %d\n", result); }
 
 int main()
 {
