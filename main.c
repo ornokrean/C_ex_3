@@ -28,7 +28,7 @@ static const char DIV_BY_ZERO_MSG[] = "Division by 0!\n";
 enum argumentType
 {
     PLUS = '+', MINUS = '-', TIMES = '*', DIVIDE = '/', POWER = '^',
-    OPERAND = 'd'
+    OPERAND = 'd', OPEN_PAR = '(', CLOSE_PAR=')'
 };
 
 
@@ -180,6 +180,7 @@ void popAndAddArgument(Stack *stack, argument *arguments, int *argNum)
 {
     argument head;
     pop(stack, &head);
+    printf("here %c\n",head.type);
     arguments[(*argNum)] = head;
     (*argNum)++;
 }
@@ -190,10 +191,15 @@ void handleInfixRightParenthesis(Stack *stack, argument *arguments, int *argNum,
     checkTop(stack, (*tempHead));
     while (!isEmptyStack(stack) && (*tempHead)->type != '(')
     {
+        char c = (*tempHead)->type;
+
         // add the popped value to arguments
         popAndAddArgument(stack, arguments, argNum);
+        checkTop(stack, (*tempHead));
+
     }
-    pop(stack, NULL); //Pop the left parenthesis //TODO problem here stack is empty
+    argument D;
+    pop(stack, &D); //Pop the left parenthesis //TODO problem here stack is empty
 }
 
 void
@@ -372,11 +378,12 @@ int main()
         //for each row entered:
         Stack *stack = stackAlloc(sizeof(argument));
         argument *arguments = (argument *) allocMemory(NULL, sizeof(argument) * strlen(line));
+
         int argNum;
         argument *tempHead;
 
         readInfix(line, stack, arguments, &argNum, &tempHead);
-        printf("Infix : \n");
+        printf("Postfix: \n");
 
         for (int i = 0; i < argNum; ++i)
         {
@@ -388,11 +395,7 @@ int main()
 
         //make it postfix:
         stack = readPostfix(stack, arguments, argNum);
-        printf("Postfix : \n");
-        for (int i = 0; i < argNum; ++i)
-        {
-            printf("type: %c, num: %d \n", arguments[i].type, arguments[i].number);
-        }
+
         freeAllAllocs(&stack, arguments, tempHead);
 
     }
