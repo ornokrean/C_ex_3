@@ -28,7 +28,7 @@ static const char DIV_BY_ZERO_MSG[] = "Division by 0!\n";
 enum argumentType
 {
     PLUS = '+', MINUS = '-', TIMES = '*', DIVIDE = '/', POWER = '^',
-    OPERAND = 'd', OPEN_PAR = '(', CLOSE_PAR=')'
+    OPERAND = 'd', OPEN_PAR = '(', CLOSE_PAR = ')'
 };
 
 
@@ -64,7 +64,7 @@ int convertToInt(const char *to_convert)
     const int res = (int) strtol(to_convert, &temp, 10);
     if (strlen(temp))
     {
-        fprintf(stderr, "eree"); //FIXME
+//        fprintf(stderr, "eree"); //FIXME
         exit(EXIT_FAILURE);
     }
     return res;
@@ -180,7 +180,6 @@ void popAndAddArgument(Stack *stack, argument *arguments, int *argNum)
 {
     argument head;
     pop(stack, &head);
-    printf("here %c\n",head.type);
     arguments[(*argNum)] = head;
     (*argNum)++;
 }
@@ -191,7 +190,6 @@ void handleInfixRightParenthesis(Stack *stack, argument *arguments, int *argNum,
     checkTop(stack, (*tempHead));
     while (!isEmptyStack(stack) && (*tempHead)->type != '(')
     {
-        char c = (*tempHead)->type;
 
         // add the popped value to arguments
         popAndAddArgument(stack, arguments, argNum);
@@ -241,6 +239,7 @@ void addAllFromStack(Stack *stack, argument *arguments, int *argNum)
         popAndAddArgument(stack, arguments, argNum);
     }
 }
+
 /**
  * this function reads a infix expression from given line
  * @param line the line to parse
@@ -306,7 +305,7 @@ void calcExpression(Stack *stack, argument operator)
     {
         if (A.number == 0)
         {
-            fprintf(stderr,DIV_BY_ZERO_MSG);
+//            fprintf(stderr,DIV_BY_ZERO_MSG);
         }
         else
         {
@@ -351,7 +350,7 @@ Stack *readPostfix(Stack *stack, argument *arguments, int argNum)
 // TODO handle answer
     argument answer;
     pop(stack, &answer);
-    printf("\n\n%d", answer.number);
+//    printf("\n\n%d", answer.number);
     return stack;
 }
 
@@ -383,12 +382,20 @@ int main()
         argument *tempHead;
 
         readInfix(line, stack, arguments, &argNum, &tempHead);
-        printf("Postfix: \n");
+        printf("Postfix: ");
 
         for (int i = 0; i < argNum; ++i)
         {
-            printf("type: %c, num: %d \n", arguments[i].type, arguments[i].number);
+            if (arguments[i].type == OPERAND)
+            {
+                printf(" %d ", arguments[i].number);
+            }
+            else
+            {
+                printf("%c", arguments[i].type);
+            }
         }
+        printf("\n");
         freeStack(&stack);
 
         // not moving on to next arg
@@ -404,6 +411,6 @@ int main()
 
 
 
-// gcc main.c stack.c stack.h -o ex3
+// gcc -Wextra -Wall -Wvla -lm -std=c99 main.c stack.c stack.h -o ex3
 
 // valgrind --leak-check=full --show-possibly-lost=yes --show-reachable=yes  --undef-value-errors=yes ex3
