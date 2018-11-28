@@ -250,6 +250,9 @@ void addAllFromStack(Stack *stack, argument *arguments, int *argNum)
  */
 void readInfix(char *line, Stack *stack, argument *arguments, int *argNum, argument **tempHead)
 {
+    printf("Infix: ");
+
+
     (*argNum) = 0;
     (*tempHead) = (argument *) allocMemory(NULL, sizeof(argument));
     removeChar(line, LINE_CHAR);
@@ -259,23 +262,32 @@ void readInfix(char *line, Stack *stack, argument *arguments, int *argNum, argum
         if (isdigit(line[i]))
         {
             i = handleInfixDigit(line, arguments, argNum, i);
+            printf(" %d ",arguments[(*argNum)-1].number);
             continue; //TODO maybe remove it
         }
-        else if (line[i] == '(')
+        else
         {
-            push(stack, &line[i]);
-        }
-        else if (line[i] == ')')
-        {
-            handleInfixRightParenthesis(stack, arguments, argNum, tempHead);
-        }
-        else if (isOperator(line[i]))// operator is found
-        {
-            handleInfixOperator(line, stack, arguments, argNum, tempHead, i);
+            printf("%c",line[i]);
+            if (line[i] == '(')
+            {
+                push(stack, &line[i]);
+            }
+            else if (line[i] == ')')
+            {
+                handleInfixRightParenthesis(stack, arguments, argNum, tempHead);
+            }
+            else if (isOperator(line[i]))// operator is found
+            {
+                handleInfixOperator(line, stack, arguments, argNum, tempHead, i);
+            }
         }
         i++;
     }
     addAllFromStack(stack, arguments, argNum);
+
+
+    printf("\n");
+
 }
 
 /**
@@ -330,7 +342,7 @@ void calcExpression(Stack *stack, argument operator)
  * @param argNum the number of items in the arguments array
  * @return the given stack
  */
-Stack *readPostfix(Stack *stack, argument *arguments, int argNum)
+int calcPostfix(Stack *stack, argument *arguments, int argNum)
 {
     int j = 0;
     stack = stackAlloc(sizeof(argument));
@@ -347,11 +359,9 @@ Stack *readPostfix(Stack *stack, argument *arguments, int argNum)
         }
         j++;
     }
-// TODO handle answer
     argument answer;
     pop(stack, &answer);
-//    printf("\n\n%d", answer.number);
-    return stack;
+    return answer.number;
 }
 
 /**
@@ -367,6 +377,27 @@ void freeAllAllocs(Stack **stack, argument *arguments, argument *tempHead)
     free(arguments);
 }
 
+void printPostfix(argument *arguments, int argNum)
+{
+    printf("Postfix: ");
+
+    for (int i = 0; i < argNum; ++i)
+    {
+        if (arguments[i].type == OPERAND)
+        {
+            printf(" %d ", arguments[i].number);
+        }
+        else
+        {
+            printf("%c", arguments[i].type);
+        }
+    }
+    printf("\n");
+}
+
+void printExpressionResult(int result)
+{ printf("The value is %d", result); }
+
 int main()
 {
 
@@ -375,34 +406,20 @@ int main()
     while (fgets(line, 101, stdin))
     {
         //for each row entered:
+
+
         Stack *stack = stackAlloc(sizeof(argument));
         argument *arguments = (argument *) allocMemory(NULL, sizeof(argument) * strlen(line));
 
         int argNum;
         argument *tempHead;
 
+
         readInfix(line, stack, arguments, &argNum, &tempHead);
-        printf("Postfix: ");
-
-        for (int i = 0; i < argNum; ++i)
-        {
-            if (arguments[i].type == OPERAND)
-            {
-                printf(" %d ", arguments[i].number);
-            }
-            else
-            {
-                printf("%c", arguments[i].type);
-            }
-        }
-        printf("\n");
+        printPostfix(arguments, argNum);
         freeStack(&stack);
-
-        // not moving on to next arg
-
-        //make it postfix:
-        stack = readPostfix(stack, arguments, argNum);
-
+        int result = calcPostfix(stack, arguments, argNum);
+        printExpressionResult(result);
         freeAllAllocs(&stack, arguments, tempHead);
 
     }
