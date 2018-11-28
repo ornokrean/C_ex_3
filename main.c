@@ -226,7 +226,7 @@ void addAllFromStack(Stack *stack, argument *arguments, int *argNum)
 }
 
 void readInfix(char *line, Stack *stack, argument *arguments, int *argNum,
-               argument **tempHead)
+               argument **tempHead )
 {
     (*argNum) = 0;
     (*tempHead) = (argument *) allocMemory(NULL, sizeof(argument));
@@ -330,6 +330,8 @@ int main()
         argument *tempHead;
 
         readInfix(line, stack, arguments, &argNum, &tempHead);
+        printf("Infix : \n");
+
         for (int i = 0; i < argNum; ++i)
         {
             printf("type: %c, num: %d \n",arguments[i].type,arguments[i].number);
@@ -340,6 +342,11 @@ int main()
 
         //make it postfix:
         stack = readPostfix(stack, arguments, argNum);
+        printf("Postfix : \n");
+        for (int i = 0; i < argNum; ++i)
+        {
+            printf("type: %c, num: %d \n",arguments[i].type,arguments[i].number);
+        }
         freeAllAllocs(&stack, arguments, tempHead);
 
     }
