@@ -201,11 +201,10 @@ int main()
             {
                 checkTop(stack, tempHead);
                 argument latestOp;
+                latestOp.type = line[i];
                 if (isEmptyStack(stack) || tempHead->type == '(')
                 {
-
                     // Push the operator onto the stack
-                    latestOp.type = line[i];
                     push(stack, &latestOp);
 
                 }
@@ -213,7 +212,7 @@ int main()
                 {
                     checkTop(stack, tempHead);
                     while (!isEmptyStack(stack) && tempHead->type != '('
-                           && pred(line[i], tempHead->type) < 2)
+                           && pred(tempHead->type,line[i]) < 2)
                     {
                         //Pop the stack and add the top value to arguments
                         argument head;
@@ -237,27 +236,14 @@ int main()
             argNum++;
         }
 
-//        for (int i = 0; i < 4; i++)
-//        {
-//
-//                printf("print type: %c data: %s number: %d\n", arguments[i].type, arguments[i].data, arguments[i].number);
-//
-//        }
-//        for (int j = 0; j < argNum; ++j)
-//        {
-//            printf("print type: %c  number: %d\n", arguments[j].type,
-//                    arguments[j].number);
-//        }
-//         12   if (arguments[j].data != NULL)
-//            {
-//                free(arguments[j].data);
-//            }
-//        }
         freeStack(&stack);
+
+        // not moving on to next arg
 
         //make it postfix:
         int j = 0;
         stack = stackAlloc(sizeof(argument));
+
         while (j < argNum)
         {
             if (!isOperator(arguments[j].type)) // operand
@@ -266,6 +252,7 @@ int main()
             }
             else // operator
             {
+
                 argument A;
                 pop(stack, &A);
                 argument B;
@@ -289,8 +276,6 @@ int main()
                 }else if (arguments[j].type == MINUS){
                     res.number =  B.number-A.number;
                 }
-
-//                res.number= calcExp(B,A,arguments[j]);
                 push(stack,&res);
             }
             j++;
@@ -298,7 +283,9 @@ int main()
 
         argument answer;
         pop(stack,&answer);
-        printf("%d",answer.number);
+        printf("\n\n%d",answer.number);
+
+
         freeStack(&stack);
         free(tempHead);
         free(arguments);
