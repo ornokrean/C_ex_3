@@ -63,6 +63,12 @@ int convertToInt(const char *to_convert)
     return res;
 }
 
+/**
+ * this function checks the top of the stack given. it does not pop the value, only copies it to
+ * head given
+ * @param stack the stack to peek to
+ * @param head the pointer to fill with the data extracted
+ */
 void checkTop(Stack *stack, argument *head)
 {
     if (!isEmptyStack(stack))
@@ -100,31 +106,31 @@ void *allocMemory(void *oldMemory, size_t newSize)
 int pred(char op1, char op2)
 {
 
-    if (op1 == POWER)
+    if (op1 == POWER) // operator 1 is ^, check the other one
     {
         if (op2 == POWER)
         {
-            return 0;
+            return 0; // same precedence
         }
-        return 1;
+        return 1; // power is bigger than any other
     }
-    if (op1 == TIMES || op1 == DIVIDE)
+    if (op1 == TIMES || op1 == DIVIDE) // operator 1 is * or /, check the other one
     {
         if (op2 == TIMES || op2 == DIVIDE)
         {
-            return 0;
+            return 0; // same precedence
         }
-        else if (op2 == POWER)
+        else if (op2 == POWER) // power is bigger than any other
         {
             return 2;
         }
-        return 1;
+        return 1; // operator 2 is + or -, smaller than * or /
     }
-    else if (op2 == POWER || op2 == TIMES || op2 == DIVIDE)
+    else if (op2 == POWER || op2 == TIMES || op2 == DIVIDE) // operator 1 can only be + or -
     {
-        return 2;
+        return 2; // ^ or * or / is bigger than + or -
     }
-    return 0;
+    return 0; // same precedence
 }
 
 /**
@@ -142,32 +148,14 @@ void removeChar(const char *currLine, char to_remove)
 }
 
 
-
-int main()
-{
-
-
-    char line[101];
-    while (fgets(line, 101, stdin))
-    {
-        //for each row entered:
-        Stack *stack = stackAlloc(sizeof(argument));
-        argument *arguments = (argument *) allocMemory(NULL, sizeof(argument) * strlen(line));
-        removeChar(line, LINE_CHAR);
-        int i = 0;
-        int argNum = 0;
-        argument *tempHead = (argument *) allocMemory(NULL, sizeof(argument));
-        while (i < (int)strlen(line))
-        {
-            if (isdigit(line[i]))
-            {
-                //create new number
-                arguments[argNum].type = OPERAND;
-                // insert the int to char and add space
-                char currNum[100] = {0};
-                int currIndex = 0;
-                // concat
-                while (isdigit(line[i]) && i < (int)strlen(line))
+int handleInfixDigit(char *line, argument *arguments, int *argNum, int i)
+{//create new number
+    arguments[(*argNum)].type = OPERAND;
+    // insert the int to char and add space
+    char currNum[100] = {0};
+    int currIndex = 0;
+    // concat
+    while (isdigit(line[i]) && i < (int)strlen(line))
                 {
                     // add to cur number
                     currNum[currIndex] = line[i];
@@ -175,9 +163,80 @@ int main()
                     i++;
                 }
 
-                //add to our array
-                arguments[argNum].number = convertToInt(currNum);
-                argNum++;
+    //add to our array
+    arguments[(*argNum)].number = convertToInt(currNum);
+    (*argNum)++;
+    return i;
+}
+
+void handleInfixRightParenthesis(Stack *stack, argument *arguments, int *argNum,
+                                 argument **tempHead)
+{
+    checkTop(stack, (*tempHead));
+    while (!isEmptyStack(stack) && (*tempHead)->type != '(')
+                {
+                    // add the popped value to arguments
+                    argument head;
+                    pop(stack, &head);
+                    arguments[(*argNum)] = head;
+                    (*argNum)++;
+                }
+    pop(stack, NULL); //Pop the left parenthesis
+}
+
+void handleInfixOperator(char *line, Stack *stack, argument *arguments, int *argNum,
+                         argument **tempHead,
+                         int i)
+{
+    checkTop(stack, (*tempHead));
+    argument latestOp;
+    latestOp.type = line[i];
+    if (isEmptyStack(stack) || (*tempHead)->type == '(')
+                {
+                    // Push the operator onto the stack
+                    push(stack, &latestOp);
+
+                }
+                else
+                {
+                    checkTop(stack, (*tempHead));
+                    while (!isEmptyStack(stack) && (*tempHead)->type != '('
+                           && pred((*tempHead)->type, line[i]) < 2)
+                    {
+                        //Pop the stack and add the top value to arguments
+                        argument head;
+                        pop(stack, &head);
+                        arguments[(*argNum)] = head;
+                        (*argNum)++;
+
+                    }
+                    push(stack, &latestOp);
+                }
+}
+
+void addAllFromStack(Stack *stack, argument *arguments, int *argNum)
+{
+    while (!isEmptyStack(stack))
+        {
+            argument head;
+            pop(stack, &head);
+            arguments[(*argNum)] = head;
+            (*argNum)++;
+        }
+}
+
+void readInfix(char *line, Stack *stack, argument *arguments, int *argNum,
+               argument **tempHead)
+{
+    (*argNum) = 0;
+    (*tempHead) = (argument *) allocMemory(NULL, sizeof(argument));
+    removeChar(line, LINE_CHAR);
+    int i = 0;
+    while (i < (int)strlen(line))
+        {
+            if (isdigit(line[i]))
+            {
+                i = handleInfixDigit(line, arguments, argNum, i);
                 continue;
             }
             else if (line[i] == '(')
@@ -186,80 +245,26 @@ int main()
             }
             else if (line[i] == ')')
             {
-                checkTop(stack, tempHead);
-                while (!isEmptyStack(stack) && tempHead->type != '(')
-                {
-                    // add the popped value to arguments
-                    argument head;
-                    pop(stack, &head);
-                    arguments[argNum] = head;
-                    argNum++;
-                }
-                pop(stack, NULL); //Pop the left parenthesis
+                handleInfixRightParenthesis(stack, arguments, argNum, tempHead);
             }
             else if (isOperator(line[i]))// operator is found
             {
-                checkTop(stack, tempHead);
-                argument latestOp;
-                latestOp.type = line[i];
-                if (isEmptyStack(stack) || tempHead->type == '(')
-                {
-                    // Push the operator onto the stack
-                    push(stack, &latestOp);
-
-                }
-                else
-                {
-                    checkTop(stack, tempHead);
-                    while (!isEmptyStack(stack) && tempHead->type != '('
-                           && pred(tempHead->type,line[i]) < 2)
-                    {
-                        //Pop the stack and add the top value to arguments
-                        argument head;
-                        pop(stack, &head);
-                        arguments[argNum] = head;
-                        argNum++;
-
-                    }
-                    push(stack, &latestOp);
-                }
+                handleInfixOperator(line, stack, arguments, argNum, tempHead, i);
             }
             i++;
         }
+    addAllFromStack(stack, arguments, argNum);
+}
 
-
-        while (!isEmptyStack(stack))
-        {
-            argument head;
-            pop(stack, &head);
-            arguments[argNum] = head;
-            argNum++;
-        }
-
-        freeStack(&stack);
-
-        // not moving on to next arg
-
-        //make it postfix:
-        int j = 0;
-        stack = stackAlloc(sizeof(argument));
-
-        while (j < argNum)
-        {
-            if (!isOperator(arguments[j].type)) // operand
-            {
-                push(stack, &arguments[j]);
-            }
-            else // operator
-            {
-
-                argument A;
-                pop(stack, &A);
-                argument B;
-                pop(stack, &B);
-                argument res;
-                res.type = OPERAND;
-                if (arguments[j].type == POWER){
+void handlePostfixOperator(Stack *stack, argument *arguments, int j)
+{
+    argument A;
+    pop(stack, &A);
+    argument B;
+    pop(stack, &B);
+    argument res;
+    res.type = OPERAND;
+    if (arguments[j].type == POWER){
                     res.number = (int) (pow(B.number, A.number) + 0.5);
 
                 }
@@ -276,23 +281,68 @@ int main()
                 }else if (arguments[j].type == MINUS){
                     res.number =  B.number-A.number;
                 }
-                push(stack,&res);
+    push(stack,&res);
+}
+
+Stack *readPostfix(Stack *stack, argument *arguments, int argNum)
+{
+    int j = 0;
+    stack = stackAlloc(sizeof(argument));
+
+    while (j < argNum)
+        {
+            if (!isOperator(arguments[j].type)) // operand
+            {
+                push(stack, &arguments[j]);
+            }
+            else // operator
+            {
+
+                handlePostfixOperator(stack, arguments, j);
             }
             j++;
         }
 
-        argument answer;
-        pop(stack,&answer);
-        printf("\n\n%d",answer.number);
+    argument answer;
+    pop(stack,&answer);
+    printf("\n\n%d",answer.number);
+    return stack;
+}
+
+void freeAllAllocs(Stack **stack, argument *arguments, argument *tempHead)
+{
+    freeStack(stack);
+    free(tempHead);
+    free(arguments);
+}
+
+int main()
+{
 
 
+    char line[101];
+    while (fgets(line, 101, stdin))
+    {
+        //for each row entered:
+        Stack *stack = stackAlloc(sizeof(argument));
+        argument *arguments = (argument *) allocMemory(NULL, sizeof(argument) * strlen(line));
+        int argNum;
+        argument *tempHead;
+
+        readInfix(line, stack, arguments, &argNum, &tempHead);
+        for (int i = 0; i < argNum; ++i)
+        {
+            printf("type: %c, num: %d \n",arguments[i].type,arguments[i].number);
+        }
         freeStack(&stack);
-        free(tempHead);
-        free(arguments);
+
+        // not moving on to next arg
+
+        //make it postfix:
+        stack = readPostfix(stack, arguments, argNum);
+        freeAllAllocs(&stack, arguments, tempHead);
 
     }
-
-
     return 0;
 }
 
