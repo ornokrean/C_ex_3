@@ -18,6 +18,13 @@ static const char EMPTY_CHAR = '\0';
 static const char LINE_CHAR = '\n';
 
 
+/**
+ * @var char DIV_BY_ZERO_MSG[]
+ * @brief error message for division by 0
+ */
+static const char DIV_BY_ZERO_MSG[] = "Division by 0!\n";
+
+
 enum argumentType
 {
     PLUS = '+', MINUS = '-', TIMES = '*', DIVIDE = '/', POWER = '^',
@@ -169,6 +176,14 @@ int handleInfixDigit(char *line, argument *arguments, int *argNum, int i)
     return i;
 }
 
+void popAndAddArgument(Stack *stack, argument *arguments, int *argNum)
+{
+    argument head;
+    pop(stack, &head);
+    arguments[(*argNum)] = head;
+    (*argNum)++;
+}
+
 void handleInfixRightParenthesis(Stack *stack, argument *arguments, int *argNum,
                                  argument **tempHead)
 {
@@ -176,12 +191,9 @@ void handleInfixRightParenthesis(Stack *stack, argument *arguments, int *argNum,
     while (!isEmptyStack(stack) && (*tempHead)->type != '(')
                 {
                     // add the popped value to arguments
-                    argument head;
-                    pop(stack, &head);
-                    arguments[(*argNum)] = head;
-                    (*argNum)++;
+                    popAndAddArgument(stack, arguments, argNum);
                 }
-    pop(stack, NULL); //Pop the left parenthesis
+    pop(stack, NULL); //Pop the left parenthesis //TODO problem here stack is empty
 }
 
 void handleInfixOperator(char *line, Stack *stack, argument *arguments, int *argNum,
@@ -204,11 +216,7 @@ void handleInfixOperator(char *line, Stack *stack, argument *arguments, int *arg
                            && pred((*tempHead)->type, line[i]) < 2)
                     {
                         //Pop the stack and add the top value to arguments
-                        argument head;
-                        pop(stack, &head);
-                        arguments[(*argNum)] = head;
-                        (*argNum)++;
-
+                        popAndAddArgument(stack, arguments, argNum);
                     }
                     push(stack, &latestOp);
                 }
@@ -218,10 +226,7 @@ void addAllFromStack(Stack *stack, argument *arguments, int *argNum)
 {
     while (!isEmptyStack(stack))
         {
-            argument head;
-            pop(stack, &head);
-            arguments[(*argNum)] = head;
-            (*argNum)++;
+            popAndAddArgument(stack, arguments, argNum);
         }
 }
 
