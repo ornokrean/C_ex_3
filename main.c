@@ -105,7 +105,7 @@ void *allocMemory(void *oldMemory, size_t newSize)
 }
 
 /**
- * this funtion decides which operator has greater precedence
+ * this function decides which operator has greater precedence
  * @param op1 the first operator
  * @param op2 the second operator
  * @return 0 if equal, 1 if op1 has greater precedence, 2 if op2 has greater precedence
@@ -222,6 +222,12 @@ handleInfixOperator(char *line, Stack *stack, argument *arguments, int *argNum, 
     }
 }
 
+/**
+ * this function adds all the items from the stack to the argument list
+ * @param stack the stack to add from
+ * @param arguments
+ * @param argNum
+ */
 void addAllFromStack(Stack *stack, argument *arguments, int *argNum)
 {
     while (!isEmptyStack(stack))
@@ -229,9 +235,15 @@ void addAllFromStack(Stack *stack, argument *arguments, int *argNum)
         popAndAddArgument(stack, arguments, argNum);
     }
 }
-
-void readInfix(char *line, Stack *stack, argument *arguments, int *argNum,
-               argument **tempHead)
+/**
+ * this function reads a infix expression from given line
+ * @param line the line to parse
+ * @param stack the stack to work with while reading the line
+ * @param arguments an array of arguments to work with
+ * @param argNum the number of items in the arguments array
+ * @param tempHead a temp argument pointer to handle some memory problems
+ */
+void readInfix(char *line, Stack *stack, argument *arguments, int *argNum, argument **tempHead)
 {
     (*argNum) = 0;
     (*tempHead) = (argument *) allocMemory(NULL, sizeof(argument));
@@ -262,13 +274,12 @@ void readInfix(char *line, Stack *stack, argument *arguments, int *argNum,
 }
 
 /**
- * this function calculates an expression given "by B op A" while A is the first item in the
- * stack, Bis the second item in the stack, and op is the operator from the arguments array
+ * this function calculates an expression given by "B operator A" while A is the first item in the
+ * stack, B is the second item in the stack, and operator given
  * @param stack a stack of arguments
- * @param arguments the array of arguments to take operator from
- * @param index the current index of the argument to take from arguments array
+ * @param operator the operator to work with
  */
-void calcExpression(Stack *stack, argument arg)
+void calcExpression(Stack *stack, argument operator)
 {
     argument A;
     pop(stack, &A);
@@ -276,16 +287,16 @@ void calcExpression(Stack *stack, argument arg)
     pop(stack, &B);
     argument res;
     res.type = OPERAND;
-    if (arg.type == POWER)
+    if (operator.type == POWER)
     {
         res.number = (int) (pow(B.number, A.number) + 0.5);
 
     }
-    else if (arg.type == TIMES)
+    else if (operator.type == TIMES)
     {
         res.number = B.number * A.number;
     }
-    else if (arg.type == DIVIDE)
+    else if (operator.type == DIVIDE)
     {
         if (A.number == 0)
         {
@@ -296,11 +307,11 @@ void calcExpression(Stack *stack, argument arg)
             res.number = B.number / A.number;
         }
     }
-    else if (arg.type == PLUS)
+    else if (operator.type == PLUS)
     {
         res.number = B.number + A.number;
     }
-    else if (arg.type == MINUS)
+    else if (operator.type == MINUS)
     {
         res.number = B.number - A.number;
     }
