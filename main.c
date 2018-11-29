@@ -17,12 +17,66 @@ static const char EMPTY_CHAR = '\0';
  */
 static const char LINE_CHAR = '\n';
 
-
 /**
- * @var char DIV_BY_ZERO_MSG[]
+ * @var char DIV_BY_ZERO_MSG
  * @brief error message for division by 0
  */
 static const char DIV_BY_ZERO_MSG[] = "Division by 0!\n";
+
+/**
+ * @var char RESULT_MSG
+ * @brief  message for result
+ */
+static const char RESULT_MSG[] = "The value is %d\n";
+
+/**
+ * @var char MEMORY_ERROR_MSG
+ * @brief error message for memory allocation
+ */
+static const char MEMORY_ERROR_MSG[] = "ERROR: Memory allocation problem. Exiting...";
+
+/**
+ * @var char PRINT_OPERAND
+ * @brief  message for operand print
+ */
+static const char PRINT_OPERAND[] = " %d ";
+
+/**
+ * @var char PRINT_OPERATOR
+ * @brief  message for operator print
+ */
+static const char PRINT_OPERATOR[] = "%c";
+
+/**
+ * @var char POSTFIX_HEADER
+ * @brief the header before printing postfix expression
+ */
+
+static const char POSTFIX_HEADER[] = "Postfix: ";
+
+/**
+ * @var char INFIX_HEADER
+ * @brief the header before printing infix expression
+ */
+static const char INFIX_HEADER[] = "Infix: ";
+
+/**
+ * @var char LINE_BREAK
+ * @brief line break string
+ */
+static const char LINE_BREAK[] = "\n";
+
+/**
+ * @var char INT_CONVERSION_ERROR_MSG
+ * @brief rror message for int conversion
+ */
+static const char INT_CONVERSION_ERROR_MSG[] = "ERROR: int conversion error.";
+
+/**
+ * @def LINE_LEN 101
+ * @brief the maximum length of a line
+ */
+#define LINE_LEN 101
 
 
 enum argumentType
@@ -64,7 +118,7 @@ int convertToInt(const char *to_convert)
     const int res = (int) strtol(to_convert, &temp, 10);
     if (strlen(temp))
     {
-        fprintf(stderr, "  "); //FIXME
+        fprintf(stderr, INT_CONVERSION_ERROR_MSG);
         exit(EXIT_FAILURE);
     }
     return res;
@@ -97,8 +151,7 @@ void *allocMemory(void *oldMemory, size_t newSize)
     void *newMemory = (oldMemory == NULL) ? malloc(newSize) : realloc(oldMemory, newSize);
     if (newMemory == NULL)
     {
-//        fprintf(stderr, MEMORY_ERROR); //FIXME
-        printf("hehewgliwjesvfds");
+        fprintf(stderr, MEMORY_ERROR_MSG);
         exit(EXIT_FAILURE);
     }
     return newMemory;
@@ -167,7 +220,7 @@ int handleInfixDigit(char *line, argument *arguments, int *argNum, int index)
 {//create new number
     arguments[(*argNum)].type = OPERAND;
     // insert the int to char and add space
-    char currNum[100] = {0};
+    char currNum[LINE_LEN] = {0};
     int currIndex = 0;
     // concat
     while (isdigit(line[index]) && index < (int) strlen(line))
@@ -209,7 +262,7 @@ void handleInfixRightParenthesis(Stack *stack, argument *arguments, int *argNum,
                                  argument **tempHead)
 {
     checkTop(stack, (*tempHead));
-    while (!isEmptyStack(stack) && (*tempHead)->type != '(')
+    while (!isEmptyStack(stack) && (*tempHead)->type != OPEN_PAR)
     {
         // add the popped value to arguments
         popAndAddArgument(stack, arguments, argNum);
@@ -236,7 +289,7 @@ handleInfixOperator(char *line, Stack *stack, argument *arguments, int *argNum, 
     checkTop(stack, (*tempHead));
     argument latestOperator;
     latestOperator.type = line[index];
-    if (isEmptyStack(stack) || (*tempHead)->type == '(')
+    if (isEmptyStack(stack) || (*tempHead)->type == OPEN_PAR)
     {
         // Push the operator onto the stack
         push(stack, &latestOperator);
@@ -246,7 +299,7 @@ handleInfixOperator(char *line, Stack *stack, argument *arguments, int *argNum, 
     {
         checkTop(stack, (*tempHead));
 
-        while (!isEmptyStack(stack) && (*tempHead)->type != '('
+        while (!isEmptyStack(stack) && (*tempHead)->type != OPEN_PAR
                && pred((*tempHead)->type, line[index]) < 2)
         {
 
@@ -283,7 +336,7 @@ void addAllFromStack(Stack *stack, argument *arguments, int *argNum)
  */
 void readInfix(char *line, Stack *stack, argument *arguments, int *argNum, argument **tempHead)
 {
-    printf("Infix: ");
+    printf(INFIX_HEADER);
 
 
     (*argNum) = 0;
@@ -295,12 +348,12 @@ void readInfix(char *line, Stack *stack, argument *arguments, int *argNum, argum
         if (isdigit(line[i]))
         {
             i = handleInfixDigit(line, arguments, argNum, i);
-            printf(" %d ", arguments[(*argNum) - 1].number);
+            printf(PRINT_OPERAND, arguments[(*argNum) - 1].number);
             continue; //TODO maybe remove it
         }
         else
         {
-            printf("%c", line[i]);
+            printf(PRINT_OPERATOR, line[i]);
             if (line[i] == OPEN_PAR)
             {
                 push(stack, &line[i]);
@@ -319,7 +372,7 @@ void readInfix(char *line, Stack *stack, argument *arguments, int *argNum, argum
     addAllFromStack(stack, arguments, argNum);
 
 
-    printf("\n");
+    printf(LINE_BREAK);
 
 }
 
@@ -417,20 +470,20 @@ void freeAllAllocs(Stack **stack, argument *arguments, argument *tempHead)
  */
 void printPostfix(argument *arguments, int argNum)
 {
-    printf("Postfix: ");
+    printf(POSTFIX_HEADER);
 
     for (int i = 0; i < argNum; ++i)
     {
         if (arguments[i].type == OPERAND)
         {
-            printf(" %d ", arguments[i].number);
+            printf(PRINT_OPERAND, arguments[i].number);
         }
         else
         {
-            printf("%c", arguments[i].type);
+            printf(PRINT_OPERATOR, arguments[i].type);
         }
     }
-    printf("\n");
+    printf(LINE_BREAK);
 }
 
 /**
@@ -438,14 +491,14 @@ void printPostfix(argument *arguments, int argNum)
  * @param result the result to print
  */
 void printExpressionResult(int result)
-{ printf("The value is %d\n", result); }
+{ printf(RESULT_MSG, result); }
 
 int main()
 {
 
 
-    char line[101];
-    while (fgets(line, 101, stdin))
+    char line[LINE_LEN];
+    while (fgets(line, LINE_LEN, stdin))
     {
         //for each row entered:
 
