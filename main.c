@@ -20,8 +20,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "stack.h"
 #include <math.h>
+#include "stack.h"
 
 /**
  * @var char EMPTY_CHAR
@@ -101,7 +101,7 @@ static const char INT_CONVERSION_ERROR_MSG[] = "ERROR: int conversion error.";
  * @def FIX_TO_INT 0.5
  * @brief arbitrary fraction to fix the power function result back to int
  */
- #define FIX_TO_INT 0.5
+#define FIX_TO_INT 0.5
 
 enum argumentType
 {
@@ -127,7 +127,6 @@ int isOperator(char c)
     {
         return 1;
     }
-
     return 0;
 }
 
@@ -254,7 +253,6 @@ int handleInfixDigit(char *line, argument *arguments, int *argNum, int index)
         currIndex++;
         index++;
     }
-
     //add to our array
     arguments[(*argNum)].number = convertToInt(currNum);
     (*argNum)++;
@@ -291,7 +289,6 @@ void handleInfixRightParenthesis(Stack *stack, argument *arguments, int *argNum,
         // add the popped value to arguments
         popAndAddArgument(stack, arguments, argNum);
         checkTop(stack, (*tempHead));
-
     }
     argument D;
     pop(stack, &D); //Pop the left parenthesis
@@ -317,7 +314,6 @@ handleInfixOperator(char *line, Stack *stack, argument *arguments, int *argNum, 
     {
         // Push the operator onto the stack
         push(stack, &latestOperator);
-
     }
     else
     {
@@ -326,7 +322,6 @@ handleInfixOperator(char *line, Stack *stack, argument *arguments, int *argNum, 
         while (!isEmptyStack(stack) && (*tempHead)->type != OPEN_PAR
                && pred((*tempHead)->type, line[index]) < 2)
         {
-
             //Pop the stack and add the top value to arguments
             popAndAddArgument(stack, arguments, argNum);
             checkTop(stack, (*tempHead));
@@ -361,8 +356,6 @@ void addAllFromStack(Stack *stack, argument *arguments, int *argNum)
 void readInfix(char *line, Stack *stack, argument *arguments, int *argNum, argument **tempHead)
 {
     printf(INFIX_HEADER);
-
-
     (*argNum) = 0;
     (*tempHead) = (argument *) allocMemory(NULL, sizeof(argument));
     removeChar(line, LINE_CHAR);
@@ -373,7 +366,6 @@ void readInfix(char *line, Stack *stack, argument *arguments, int *argNum, argum
         {
             i = handleInfixDigit(line, arguments, argNum, i);
             printf(PRINT_OPERAND, arguments[(*argNum) - 1].number);
-            continue; //TODO maybe remove it
         }
         else
         {
@@ -390,12 +382,10 @@ void readInfix(char *line, Stack *stack, argument *arguments, int *argNum, argum
             {
                 handleInfixOperator(line, stack, arguments, argNum, tempHead, i);
             }
+            i++;
         }
-        i++;
     }
     addAllFromStack(stack, arguments, argNum);
-
-
     printf(LINE_BREAK);
 
 }
