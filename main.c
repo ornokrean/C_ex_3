@@ -57,6 +57,7 @@ static const char POSTFIX_HEADER[] = "Postfix: ";
 /**
  * @var char INFIX_HEADER
  * @brief the header before printing infix expression
+ *
  */
 static const char INFIX_HEADER[] = "Infix: ";
 
@@ -78,6 +79,11 @@ static const char INT_CONVERSION_ERROR_MSG[] = "ERROR: int conversion error.";
  */
 #define LINE_LEN 101
 
+/**
+ * @def FIX_TO_INT 0.5
+ * @brief arbitrary fraction to fix the power function result back to int
+ */
+ #define FIX_TO_INT 0.5
 
 enum argumentType
 {
@@ -270,7 +276,7 @@ void handleInfixRightParenthesis(Stack *stack, argument *arguments, int *argNum,
 
     }
     argument D;
-    pop(stack, &D); //Pop the left parenthesis //TODO problem here stack is empty
+    pop(stack, &D); //Pop the left parenthesis
 }
 
 /**
@@ -392,7 +398,7 @@ void calcExpression(Stack *stack, argument operator)
     res.type = OPERAND;
     if (operator.type == POWER)
     {
-        res.number = (int) (pow(B.number, A.number) + 0.5);
+        res.number = (int) (pow(B.number, A.number) + FIX_TO_INT);
 
     }
     else if (operator.type == TIMES)
