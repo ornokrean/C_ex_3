@@ -154,28 +154,42 @@ void removeChar(const char *currLine, char to_remove)
     }
 }
 
-
-int handleInfixDigit(char *line, argument *arguments, int *argNum, int i)
+/**
+ * this function activates when a digit is found, and read from the line until there are no more
+ * consecutive digits
+ * @param line the line to read from
+ * @param arguments the array of arguments
+ * @param argNum number of items in arguments array
+ * @param index the current line index
+ * @return
+ */
+int handleInfixDigit(char *line, argument *arguments, int *argNum, int index)
 {//create new number
     arguments[(*argNum)].type = OPERAND;
     // insert the int to char and add space
     char currNum[100] = {0};
     int currIndex = 0;
     // concat
-    while (isdigit(line[i]) && i < (int) strlen(line))
+    while (isdigit(line[index]) && index < (int) strlen(line))
     {
         // add to cur number
-        currNum[currIndex] = line[i];
+        currNum[currIndex] = line[index];
         currIndex++;
-        i++;
+        index++;
     }
 
     //add to our array
     arguments[(*argNum)].number = convertToInt(currNum);
     (*argNum)++;
-    return i;
+    return index;
 }
 
+/**
+ * this function pops the to of the stack and adds it into the given arguments array
+ * @param stack the stack to push/pop from
+ * @param arguments the array of arguments
+ * @param argNum number of items in arguments array
+ */
 void popAndAddArgument(Stack *stack, argument *arguments, int *argNum)
 {
     argument head;
@@ -184,6 +198,13 @@ void popAndAddArgument(Stack *stack, argument *arguments, int *argNum)
     (*argNum)++;
 }
 
+/**
+ * this function handles the situation of right parenthesis according to given algorithm
+ * @param stack the stack to push/pop from
+ * @param arguments the array of arguments
+ * @param argNum number of items in arguments array
+ * @param tempHead a temp to help with memory problems
+ */
 void handleInfixRightParenthesis(Stack *stack, argument *arguments, int *argNum,
                                  argument **tempHead)
 {
@@ -199,13 +220,22 @@ void handleInfixRightParenthesis(Stack *stack, argument *arguments, int *argNum,
     pop(stack, &D); //Pop the left parenthesis //TODO problem here stack is empty
 }
 
+/**
+ * this function handles the infix operator, according to given algorithm
+ * @param line the line to read
+ * @param stack the stack to push/pop from
+ * @param arguments the array of arguments
+ * @param argNum number of items in arguments array
+ * @param tempHead a temp to help with memory problems
+ * @param index the current line index
+ */
 void
 handleInfixOperator(char *line, Stack *stack, argument *arguments, int *argNum, argument **tempHead,
-                    int i)
+                    int index)
 {
     checkTop(stack, (*tempHead));
     argument latestOperator;
-    latestOperator.type = line[i];
+    latestOperator.type = line[index];
     if (isEmptyStack(stack) || (*tempHead)->type == '(')
     {
         // Push the operator onto the stack
@@ -217,7 +247,7 @@ handleInfixOperator(char *line, Stack *stack, argument *arguments, int *argNum, 
         checkTop(stack, (*tempHead));
 
         while (!isEmptyStack(stack) && (*tempHead)->type != '('
-               && pred((*tempHead)->type, line[i]) < 2)
+               && pred((*tempHead)->type, line[index]) < 2)
         {
 
             //Pop the stack and add the top value to arguments
@@ -265,14 +295,12 @@ void readInfix(char *line, Stack *stack, argument *arguments, int *argNum, argum
         if (isdigit(line[i]))
         {
             i = handleInfixDigit(line, arguments, argNum, i);
-            printf(" %d ",arguments[(*argNum)-1].number);
+            printf(" %d ", arguments[(*argNum) - 1].number);
             continue; //TODO maybe remove it
         }
         else
-
-
         {
-            printf("%c",line[i]);
+            printf("%c", line[i]);
             if (line[i] == OPEN_PAR)
             {
                 push(stack, &line[i]);
@@ -322,7 +350,7 @@ void calcExpression(Stack *stack, argument operator)
     {
         if (A.number == 0)
         {
-            fprintf(stderr,DIV_BY_ZERO_MSG);
+            fprintf(stderr, DIV_BY_ZERO_MSG);
         }
         else
         {
@@ -382,6 +410,11 @@ void freeAllAllocs(Stack **stack, argument *arguments, argument *tempHead)
     free(arguments);
 }
 
+/**
+ * this function prints the postfix expression to the screen
+ * @param arguments the array of arguments to print
+ * @param argNum the number of items in arguments array
+ */
 void printPostfix(argument *arguments, int argNum)
 {
     printf("Postfix: ");
@@ -400,6 +433,10 @@ void printPostfix(argument *arguments, int argNum)
     printf("\n");
 }
 
+/**
+ * this function prints the given result calculated from the expression
+ * @param result the result to print
+ */
 void printExpressionResult(int result)
 { printf("The value is %d\n", result); }
 
