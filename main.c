@@ -1,3 +1,21 @@
+/**
+ * @file CompareSequences.c
+ * @author  Or Nokrean <ornokrean@mail.huji.ac.il>
+ * @version 1.0
+ * @date 31 Oct 2018
+ *
+ * @brief this program reads the given file and print the sequence match scores.
+ *
+ * @section LICENSE
+ * This program is not a free software; contact Or Nokrean for license.
+ *
+ * @section DESCRIPTION
+ * this program reads the given file and print the sequence match scores.
+ * Input  : sequence file.
+ * Process: reading the sequences, saving them and calculating match scores between each sequence
+ * Output : printed scores that was analyzed from the given file.
+ */
+// ------------------------------ includes ------------------------------
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
