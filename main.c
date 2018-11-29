@@ -23,6 +23,8 @@
 #include <math.h>
 #include "stack.h"
 
+// -------------------------- const definitions -------------------------
+
 /**
  * @var char EMPTY_CHAR
  * @brief empty char to replace non wanted char
@@ -102,6 +104,7 @@ static const char INT_CONVERSION_ERROR_MSG[] = "ERROR: int conversion error.";
  * @brief arbitrary fraction to fix the power function result back to int
  */
 #define FIX_TO_INT 0.5
+// ------------------------------ functions -----------------------------
 
 enum argumentType
 {
@@ -534,7 +537,3 @@ int main()
 }
 
 
-
-// gcc -Wextra -Wall -Wvla -lm -std=c99 main.c stack.c stack.h -o ex3
-
-// valgrind --leak-check=full --show-possibly-lost=yes --show-reachable=yes  --undef-value-errors=yes ex3
